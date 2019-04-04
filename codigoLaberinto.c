@@ -20,18 +20,25 @@ struct Celda {
 //Estructura de los atributos que tiene cada hilo
 struct AtributosHilo{
 	char direccion; //1: arriba, 2: abajo, 3: derecha, 4:izquierda
-	//int posicionActual [2];
+	int posicionActual [2];
 	int contadorRecorrido;	
 };	
 
 //Funcion que ejecuta cada hilo
 void* recorrerLaberinto(void* atributosHilo){	
-	//struct AtributosHilo *atributos = (struct AtributosHilo*) atributosHilo;	
+	struct AtributosHilo *atributos = (struct AtributosHilo*) atributosHilo;	
 	char fin = 0; //es 1 cuando muere o llega a una salida
-	while(fin == 0){
-		
-		printf("qiwoqniwqno");
-		
+	while(fin == 0){		
+		printf("hilo en pos (%d, %d) ", atributos->posicionActual[0], atributos->posicionActual[1]);
+		//deberia de poner un char en el laberinto
+		//if(puede generar hijos en otras direcciones
+			//los genera
+		//if esta en una salida
+			//fin = 1 (termina)
+		//if puede avanzar
+			//avanza
+		//else
+			//fin = 1 (muere)
 		fin = 1;
 	}	
 	return NULL;
@@ -134,7 +141,7 @@ int main(int argc, char **argv)
 	
 	//crea un hilo de ejemplo
 	pthread_t hiloInicial;
-	struct AtributosHilo atributosHilo = {2, 0};
+	struct AtributosHilo atributosHilo = {2, {0,0},0};
 	
 	pthread_create(&hiloInicial, NULL, recorrerLaberinto, &atributosHilo);
 	
