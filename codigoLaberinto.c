@@ -1,11 +1,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
-
+//Enum de los distintos tipos de celda
 enum Tipo_Celda {PARED, FINAL, LIBRE} tipo;
 
-struct celda {
+//Estructura de una celda del laberinto
+struct Celda {
 	char caracter;
 	char arriba ;
 	char abajo ;
@@ -14,6 +16,26 @@ struct celda {
 	enum Tipo_Celda tipo;
 	//sem_t semaforo;
 	};
+	
+//Estructura de los atributos que tiene cada hilo
+struct AtributosHilo{
+	char direccion; //1: arriba, 2: abajo, 3: derecha, 4:izquierda
+	//int posicionActual [2];
+	int contadorRecorrido;	
+};	
+
+//Funcion que ejecuta cada hilo
+void* recorrerLaberinto(void* atributosHilo){	
+	//struct AtributosHilo *atributos = (struct AtributosHilo*) atributosHilo;	
+	char fin = 0; //es 1 cuando muere o llega a una salida
+	while(fin == 0){
+		
+		printf("qiwoqniwqno");
+		
+		fin = 1;
+	}	
+	return NULL;
+}
 
 int main(int argc, char **argv)
 {
@@ -38,7 +60,7 @@ int main(int argc, char **argv)
 		
 	//obtiene numero de filas
 	posActual = 0;
-	while ((charActual = fgetc(fileLaberinto)) != 'x'){
+	while ((charActual = fgetc(fileLaberinto)) != ' '){
 		numFilas[posActual++] = charActual;
 	}
 	numFilas[posActual] = '\0';
@@ -57,7 +79,7 @@ int main(int argc, char **argv)
 	printf("Filas: %d\n", filas);
 	printf("Columnas: %d\n", columnas);
 		
-	struct celda laberinto[filas][columnas];	
+	struct Celda laberinto[filas][columnas];	
 	
 	for(int i = 0; i < filas; i ++){
 		for(int j = 0; j < columnas; j++){
@@ -74,10 +96,15 @@ int main(int argc, char **argv)
 	int i = 0;
 	int j = 0;
 	
-	while ( feof(fileLaberinto) ) {
-		while ((charActual = fgetc(fileLaberinto)) != '\n'){
-			laberinto[i][j].caracter = charActual;
-			switch (charActual) {
+	
+	while((charActual = fgetc(fileLaberinto)) != EOF){
+		if(charActual == '\n'){
+			j = 0;
+			i++;
+			continue;
+		}
+		laberinto[i][j].caracter = charActual;
+		switch (charActual) {
 				case '/':
 					laberinto[i][j].tipo = FINAL;
 					break;
@@ -88,33 +115,31 @@ int main(int argc, char **argv)
 					laberinto[i][j].tipo = PARED;
 					break;					
 			}
-			j++;
-		}
-		j = 0;
-		i++;
+		j++;
 	}
+		
+	fclose(fileLaberinto);
 	
+	//TERMINA DE LEER EL ARCHIVO AQUI
+	
+	
+	//imprime el laberinto
 	for(int i = 0; i < filas; i ++){
 		for(int j = 0; j < columnas; j++){
-			printf("%c\t", laberinto[i][j].caracter);
+			printf("%c", laberinto[i][j].caracter);
 		}
 		printf("\n");
 	}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-	fclose(fileLaberinto);
+	
+	
+	//crea un hilo de ejemplo
+	pthread_t hiloInicial;
+	struct AtributosHilo atributosHilo = {2, 0};
+	
+	pthread_create(&hiloInicial, NULL, recorrerLaberinto, &atributosHilo);
+	
+	pthread_join(hiloInicial, NULL);
+			
 	
 	return 0;
 }
