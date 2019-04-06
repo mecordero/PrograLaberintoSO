@@ -1,10 +1,11 @@
-
+// HOla
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 
 //Enum de los distintos tipos de celda
 enum Tipo_Celda {PARED, FINAL, LIBRE} tipo;
+enum Direccion {ARRIBA, ABAJO, DERECHA, IZQUIERDA} direccion;
 
 //Estructura de una celda del laberinto
 struct Celda {
@@ -19,8 +20,12 @@ struct Celda {
 	
 //Estructura de los atributos que tiene cada hilo
 struct AtributosHilo{
-	char direccion; //1: arriba, 2: abajo, 3: derecha, 4:izquierda
-	int posicionActual [2];
+	struct Celda * celdas;
+	enum Direccion direccion;
+	int totalFilas;
+	int totalCol;
+	int filaActual;
+	int colActual;
 	int contadorRecorrido;	
 };	
 
@@ -28,18 +33,57 @@ struct AtributosHilo{
 void* recorrerLaberinto(void* atributosHilo){	
 	struct AtributosHilo *atributos = (struct AtributosHilo*) atributosHilo;	
 	char fin = 0; //es 1 cuando muere o llega a una salida
-	while(fin == 0){		
-		printf("hilo en pos (%d, %d) ", atributos->posicionActual[0], atributos->posicionActual[1]);
-		//deberia de poner un char en el laberinto
-		//if(puede generar hijos en otras direcciones
-			//los genera
-		//if esta en una salida
-			//fin = 1 (termina)
-		//if puede avanzar
-			//avanza
-		//else
-			//fin = 1 (muere)
-		fin = 1;
+	while(fin == 0) {		
+		printf("hilo en pos (%d, %d) ", atributos->filaActual, atributos->colActual);
+		
+		int sigFila = atributos->filaActual;
+		int sigCol = atributos->colActual;
+		switch (atributos->direccion) {
+			case ABAJO:
+				sigFila++;
+			break;
+			case ARRIBA:
+				sigFila--;
+			break;
+			case DERECHA:
+				sigCol++;
+			break;
+			case IZQUIERDA:
+				sigCol++;
+			break;
+		}
+
+		struct Celda * celdaSig = &(atributos->celdas[sigFila * atributos->totalCol + sigCol]);
+
+		if(celdaSig->tipo == LIBRE){
+			if( (atributos->direccion == ABAJO && celdaSig->abajo == '.') ||
+				(atributos->direccion == ARRIBA && celdaSig->arriba == '.')  ||
+				(atributos->direccion == DERECHA && celdaSig->derecha == '.') ||
+				(atributos->direccion == IZQUIERDA && celdaSig->izquierda == '.') ) {
+
+				// Actualiza la posición actual con la siguiente
+				atributos->colActual = sigCol;
+				atributos->filaActual = sigFila;
+				// Se registra en la celda
+				switch (atributos->direccion) {
+					case ABAJO:
+						celdaSig->abajo = pthread_self();
+						break;
+					case ARRIBA:
+						celdaSig->arriba = pthread_self();
+						break;
+					case DERECHA:
+						celdaSig->derecha = pthread_self();
+						break;
+					case IZQUIERDA:
+						celdaSig->izquierda = pthread_self();
+						break;
+				}
+			}
+		}
+		else if(celdaSig->tipo == PARED){
+			fin = 1;
+		} else fin = 1; //Llegó
 	}	
 	return NULL;
 }
@@ -138,10 +182,15 @@ int main(int argc, char **argv)
 		printf("\n");
 	}
 	
-	
+
+
 	//crea un hilo de ejemplo
 	pthread_t hiloInicial;
-	struct AtributosHilo atributosHilo = {2, {0,0},0};
+	struct AtributosHilo atributosHilo = {*laberinto, DERECHA, filas, columnas, 0, 0, 0};
+	
+	if ( laberinto[1][0].tipo != PARED) {
+		atributosHilo.direccion = ABAJO;
+	}
 	
 	pthread_create(&hiloInicial, NULL, recorrerLaberinto, &atributosHilo);
 	
