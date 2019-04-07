@@ -48,7 +48,7 @@ char nuevoChar(){
 }
 
 //Funcion que revisa si una celda es libre
-char celdaEsLibre(int col, int fila, struct Celda * celdas, int totalCols, int totalFilas){
+char celdaEsLibre(int col, int fila, struct Celda * celdas, int totalCols, int totalFilas, enum Direccion direccion){
 	
 	if(col < 0 || fila < 0)
 		return 0;
@@ -56,8 +56,16 @@ char celdaEsLibre(int col, int fila, struct Celda * celdas, int totalCols, int t
 		return 0;
 	struct Celda * celda = &(celdas[fila * totalCols + col]);
 
-	if(celda->tipo == LIBRE)
-		return 1;
+	if(celda->tipo == LIBRE){
+		if(direccion == ARRIBA && celda->arriba == '.')
+			return 1;
+		else if(direccion == ABAJO && celda->abajo == '.')
+			return 1;
+		else if(direccion == IZQUIERDA && celda->izquierda == '.')
+			return 1;
+		else if(direccion == DERECHA && celda->derecha == '.')
+			return 1;
+	}
 	return 0;
 }
 
@@ -69,6 +77,56 @@ void* recorrerLaberinto(void* atributosHilo){
 	//marca la posicion en la que inicia
 	atributos->celdas[atributos->filaActual * atributos->totalCols + atributos->colActual ].caracter = atributos->caracter;
 	
+	
+	//se fija si puede crear hilos a los lados
+	/*
+	if(atributos->direccion == DERECHA || atributos->direccion == IZQUIERDA){
+					
+		//puede crear hijos arriba o abajo
+					
+		//si puede crear hacia arriba
+		if(celdaEsLibre(atributos->colActual, atributos->filaActual-1, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+			pthread_t hiloHijo;
+			struct AtributosHilo atributosHilo = {atributos->celdas, ARRIBA, atributos->totalFilas, atributos->totalCols, 
+			atributos->filaActual-1, atributos->colActual, atributos->contadorRecorrido + 1,nuevoChar()};
+			pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+			pthread_join(hiloHijo, NULL);
+						
+		//si puede crear hacia abajo
+		}else if(celdaEsLibre(atributos->colActual, atributos->filaActual+1, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+			pthread_t hiloHijo;
+			struct AtributosHilo atributosHilo = {atributos->celdas, ABAJO, atributos->totalFilas, atributos->totalCols, 
+			atributos->filaActual+1, atributos->colActual, atributos->contadorRecorrido + 1,nuevoChar()};
+			pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+			pthread_join(hiloHijo, NULL);
+		}
+					
+					
+	}
+	else if(atributos->direccion == ARRIBA || atributos->direccion == ABAJO){
+		//puede crear hijos derecha o izquierda
+					
+		//si puede crear hacia derecha
+		if(celdaEsLibre(atributos->colActual+1, atributos->filaActual, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+			pthread_t hiloHijo;
+			struct AtributosHilo atributosHilo = {atributos->celdas, ARRIBA, atributos->totalFilas, atributos->totalCols, 
+			atributos->filaActual, atributos->colActual+1, atributos->contadorRecorrido + 1,nuevoChar()};
+			pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+			pthread_join(hiloHijo, NULL);
+						
+		//si puede crear hacia izquierda
+		}else if(celdaEsLibre(atributos->colActual-1, atributos->filaActual, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+			pthread_t hiloHijo;
+			struct AtributosHilo atributosHilo = {atributos->celdas, ABAJO, atributos->totalFilas, atributos->totalCols, 
+			atributos->filaActual, atributos->colActual-1, atributos->contadorRecorrido + 1,nuevoChar()};
+			pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+			pthread_join(hiloHijo, NULL);
+		}
+	} */
 	
 	char fin = 0; //es 1 cuando muere o llega a una salida
 	while(fin == 0) {				
@@ -90,7 +148,6 @@ void* recorrerLaberinto(void* atributosHilo){
 				sigCol--;
 			break;
 		}
-
 		//busca la celda a la que se va a mover
 		struct Celda * celdaSig = &(atributos->celdas[sigFila * atributos->totalCols + sigCol ]);
 
@@ -127,8 +184,8 @@ void* recorrerLaberinto(void* atributosHilo){
 					
 					//puede crear hijos arriba o abajo
 					
-					//si puede creas arriba
-					if(celdaEsLibre(atributos->colActual, atributos->filaActual-1, atributos->celdas, atributos->totalCols, atributos->totalFilas)){
+					//si puede crear hacia arriba
+					if(celdaEsLibre(atributos->colActual, atributos->filaActual-1, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
 						pthread_t hiloHijo;
 						struct AtributosHilo atributosHilo = {atributos->celdas, ARRIBA, atributos->totalFilas, atributos->totalCols, 
 							atributos->filaActual-1, atributos->colActual, atributos->contadorRecorrido + 1,nuevoChar()};
@@ -137,7 +194,7 @@ void* recorrerLaberinto(void* atributosHilo){
 						pthread_join(hiloHijo, NULL);
 						
 					//si puede crear hacia abajo
-					}else if(celdaEsLibre(atributos->colActual, atributos->filaActual+1, atributos->celdas, atributos->totalCols, atributos->totalFilas)){
+					}else if(celdaEsLibre(atributos->colActual, atributos->filaActual+1, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
 						pthread_t hiloHijo;
 						struct AtributosHilo atributosHilo = {atributos->celdas, ABAJO, atributos->totalFilas, atributos->totalCols, 
 							atributos->filaActual+1, atributos->colActual, atributos->contadorRecorrido + 1,nuevoChar()};
@@ -150,6 +207,25 @@ void* recorrerLaberinto(void* atributosHilo){
 				}
 				else if(atributos->direccion == ARRIBA || atributos->direccion == ABAJO){
 					//puede crear hijos derecha o izquierda
+					
+					//si puede crear hacia derecha
+					if(celdaEsLibre(atributos->colActual+1, atributos->filaActual, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+						pthread_t hiloHijo;
+						struct AtributosHilo atributosHilo = {atributos->celdas, ARRIBA, atributos->totalFilas, atributos->totalCols, 
+							atributos->filaActual, atributos->colActual+1, atributos->contadorRecorrido + 1,nuevoChar()};
+						pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+						pthread_join(hiloHijo, NULL);
+						
+					//si puede crear hacia izquierda
+					}else if(celdaEsLibre(atributos->colActual-1, atributos->filaActual, atributos->celdas, atributos->totalCols, atributos->totalFilas, atributos->direccion)){
+						pthread_t hiloHijo;
+						struct AtributosHilo atributosHilo = {atributos->celdas, ABAJO, atributos->totalFilas, atributos->totalCols, 
+							atributos->filaActual, atributos->colActual-1, atributos->contadorRecorrido + 1,nuevoChar()};
+						pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
+	
+						pthread_join(hiloHijo, NULL);
+					}
 					
 					
 				}
@@ -209,7 +285,6 @@ int main(int argc, char **argv)
 	
 	for(int i = 0; i < filas; i ++){
 		for(int j = 0; j < columnas; j++){
-			laberinto[i][j].caracter = '*';
 			laberinto[i][j].arriba = '.';
 			laberinto[i][j].abajo = '.';
 			laberinto[i][j].derecha = '.';
@@ -272,7 +347,7 @@ int main(int argc, char **argv)
 	pthread_join(hiloInicial, NULL);
 			
 	
-	printf("\n");
+	printf("laberinto\n");
 	printf("\n");
 	//imprime el laberinto
 	for(int i = 0; i < filas; i ++){
