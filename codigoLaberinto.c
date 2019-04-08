@@ -252,6 +252,8 @@ void *recorrerLaberinto(void *atributosHilo)
 		else if (celdaSig->tipo == PARED) // TODO: Falta caso cuando se llega al final del laberinto
 		{
 			fin = 1;
+			printf("El hilo %c topa con pared, ha reccorrido %d espacios\n\n", atributos->caracter, atributos->contadorRecorrido);
+			
 		}
 		else {
 			fin = 1; //Llegó
