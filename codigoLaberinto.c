@@ -151,6 +151,9 @@ void *recorrerLaberinto(void *atributosHilo)
 			// printf("izquierda es: %c\n", celda->izquierda);
 			break;
 		}
+		
+		//aumenta el contador
+		atributos->contadorRecorrido++;
 
 		//se fija si puede crear hilos a los lados
 
@@ -164,9 +167,8 @@ void *recorrerLaberinto(void *atributosHilo)
 			{
 				pthread_t hiloHijo;
 				char id = nuevoChar();
-				printf("se crea hilo %c hijo de %c, direccion arriba\n\n", id, atributos->caracter);
 				struct AtributosHilo atributosHilo = {atributos->celdas, ARRIBA, atributos->totalFilas, atributos->totalCols,
-													  atributos->filaActual - 1, atributos->colActual, atributos->contadorRecorrido + 1, id};
+													  atributos->filaActual - 1, atributos->colActual, atributos->contadorRecorrido, id};
 				pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
 
 				pthread_join(hiloHijo, NULL);
@@ -177,9 +179,8 @@ void *recorrerLaberinto(void *atributosHilo)
 			{
 				pthread_t hiloHijo;
 				char id = nuevoChar();
-				printf("se crea hilo %c hijo de %c, direccion abajo\n\n", id, atributos->caracter);
 				struct AtributosHilo atributosHilo = {atributos->celdas, ABAJO, atributos->totalFilas, atributos->totalCols,
-													  atributos->filaActual + 1, atributos->colActual, atributos->contadorRecorrido + 1, id};
+													  atributos->filaActual + 1, atributos->colActual, atributos->contadorRecorrido, id};
 				pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
 
 				pthread_join(hiloHijo, NULL);
@@ -194,9 +195,8 @@ void *recorrerLaberinto(void *atributosHilo)
 			{
 				pthread_t hiloHijo;
 				char id = nuevoChar();
-				printf("se crea hilo %c hijo de %c, direccion derecha\n\n", id, atributos->caracter);
 				struct AtributosHilo atributosHilo = {atributos->celdas, DERECHA, atributos->totalFilas, atributos->totalCols,
-													  atributos->filaActual, atributos->colActual + 1, atributos->contadorRecorrido + 1, id};
+													  atributos->filaActual, atributos->colActual + 1, atributos->contadorRecorrido, id};
 				pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
 
 				pthread_join(hiloHijo, NULL);
@@ -207,9 +207,8 @@ void *recorrerLaberinto(void *atributosHilo)
 			{
 				pthread_t hiloHijo;
 				char id = nuevoChar();
-				printf("se crea hilo %c hijo de %c, direccion izquierda\n\n", id, atributos->caracter);
 				struct AtributosHilo atributosHilo = {atributos->celdas, IZQUIERDA, atributos->totalFilas, atributos->totalCols,
-													  atributos->filaActual, atributos->colActual - 1, atributos->contadorRecorrido + 1, id};
+													  atributos->filaActual, atributos->colActual - 1, atributos->contadorRecorrido, id};
 				pthread_create(&hiloHijo, NULL, recorrerLaberinto, &atributosHilo);
 				pthread_join(hiloHijo, NULL);
 			}
@@ -257,6 +256,9 @@ void *recorrerLaberinto(void *atributosHilo)
 		else {
 			fin = 1; //Llegó
 			exito = 0;
+			
+			printf("El hilo %c llega a una salida, ha reccorrido %d espacios\n\n", atributos->caracter, ++atributos->contadorRecorrido);
+			
 		}
 
 
