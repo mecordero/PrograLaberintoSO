@@ -29,10 +29,6 @@ int exito = 0;
 struct Celda
 {
 	char caracter;
-	char arriba;
-	char abajo;
-	char derecha;
-	char izquierda;
 	enum Tipo_Celda tipo;
 	sem_t semaforo;
 };
@@ -78,27 +74,16 @@ char celdaEsLibre(int col, int fila, struct Celda *celdas, int totalCols, int to
 		return 0;
 	if (col >= totalCols || fila >= totalFilas)
 		return 0;
+	
 	struct Celda *celda = &(celdas[fila * totalCols + col]);
 
-	if (celda->tipo == LIBRE)
-	{
-		if (direccion == ARRIBA && celda->arriba == '.')
-		{
-			return 1;
-		}
-		else if (direccion == ABAJO && celda->abajo == '.')
-		{
-			return 1;
-		}
-		else if (direccion == IZQUIERDA && celda->izquierda == '.')
-		{
-			return 1;
-		}
-		else if (direccion == DERECHA && celda->derecha == '.')
-		{
-			return 1;
-		}
+	sem_wait(&(celda->semaforo));
+	
+	if(celda->caracter == ' '){
+		sem_post(&celda->semaforo);
+		return 1;
 	}
+	sem_post(&celda->semaforo);
 	return 0;
 }
 
@@ -125,33 +110,14 @@ void *recorrerLaberinto(void *atributosHilo)
 	char fin = 0; //es 1 cuando muere o llega a una salida
 	while (fin == 0)
 	{
-		//imprimirLaberinto(atributos->celdas, atributos->totalFilas, atributos->totalCols);
+		imprimirLaberinto(atributos->celdas, atributos->totalFilas, atributos->totalCols);
+		sleep(3);
 		struct Celda *celda = &atributos->celdas[atributos->filaActual * atributos->totalCols + atributos->colActual];
 		sem_wait(&(celda->semaforo));
 		//marca la posicion en la que inicia
 		celda->caracter = atributos->caracter;
 		
-		// Se registra en la celda
-		switch (atributos->direccion)
-		{
-		case ABAJO:
-			celda->abajo = '*';
-			// printf("abajo es: %c\n", celda->abajo);
-			break;
-		case ARRIBA:
-			celda->arriba = '*';
-			// printf("arriba es: %c\n", celda->arriba);
-			break;
-		case DERECHA:
-			celda->derecha = '*';
-			// printf("derecha es: %c\n", celda->derecha);
-			break;
-		case IZQUIERDA:
-			celda->izquierda = '*';
-			// printf("izquierda es: %c\n", celda->izquierda);
-			break;
-		}
-		
+			
 		//aumenta el contador
 		atributos->contadorRecorrido++;
 
@@ -239,14 +205,14 @@ void *recorrerLaberinto(void *atributosHilo)
 		//se fija si la siguiente celda es libre
 		if (celdaSig->tipo == LIBRE)
 		{
-			if ((atributos->direccion == ABAJO && celdaSig->abajo == '.') ||
-				(atributos->direccion == ARRIBA && celdaSig->arriba == '.') ||
-				(atributos->direccion == DERECHA && celdaSig->derecha == '.') ||
-				(atributos->direccion == IZQUIERDA && celdaSig->izquierda == '.'))
+			if (celdaEsLibre(sigCol, sigFila, atributos->celdas, atributos->totalFilas, atributos->totalCols, direccion))
 			{
 				// Actualiza la posición actual con la siguiente
 				atributos->colActual = sigCol;
 				atributos->filaActual = sigFila;
+			}else{ 
+				fin = 1;
+				printf("El hilo %c ya no puede avanzar, ha recorrido %d espacios \n\n", atributos->caracter, atributos->contadorRecorrido);
 			}
 		}
 		else if (celdaSig->tipo == PARED) // TODO: Falta caso cuando se llega al final del laberinto
@@ -335,10 +301,6 @@ int main(int argc, char **argv)
 	{
 		for (int j = 0; j < columnas; j++)
 		{
-			laberinto[i][j].arriba = '.';
-			laberinto[i][j].abajo = '.';
-			laberinto[i][j].derecha = '.';
-			laberinto[i][j].izquierda = '.';
 			tipo = PARED;
 			sem_init(&laberinto[i][j].semaforo, 0, 10);
 		}
